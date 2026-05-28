@@ -14,6 +14,13 @@ const SCHOOL_PROFILE = {
   phone: "(02)8685-8888",
   lineLabel: "@happyland-demo",
   lineUrl: "https://line.me/R/ti/p/@school-line",
+  // Future Google Forms setup:
+  // 1. Create official Google Forms for visit booking and enrollment inquiry.
+  // 2. Paste the real published form URLs below.
+  // 3. Set useGoogleFormsForPublicSubmissions to true so public CTAs open Google Forms.
+  googleVisitFormUrl: "https://forms.gle/3tC6rLtGcDry6oGE9",
+  googleInquiryFormUrl: "PASTE_GOOGLE_INQUIRY_FORM_URL_HERE",
+  useGoogleFormsForPublicSubmissions: false,
   address: "新北市樹林區八德街118號1、2、3樓及120號1樓",
   officeHours: "請填入園所服務時間",
   adminPin: "1234",
@@ -266,10 +273,46 @@ function setRoute(path) {
   location.hash = path;
 }
 
+function publicVisitLink(programName = "") {
+  if (SCHOOL_PROFILE.useGoogleFormsForPublicSubmissions) {
+    return {
+      href: SCHOOL_PROFILE.googleVisitFormUrl,
+      target: "_blank",
+      rel: "noreferrer"
+    };
+  }
+  return {
+    href: programName ? `#/visit?program=${encodeURIComponent(programName)}` : "#/visit",
+    target: "",
+    rel: ""
+  };
+}
+
+function publicInquiryLink(programName = "") {
+  if (SCHOOL_PROFILE.useGoogleFormsForPublicSubmissions) {
+    return {
+      href: SCHOOL_PROFILE.googleInquiryFormUrl,
+      target: "_blank",
+      rel: "noreferrer"
+    };
+  }
+  return {
+    href: programName ? `#/inquiry?program=${encodeURIComponent(programName)}` : "#/inquiry",
+    target: "",
+    rel: ""
+  };
+}
+
+function linkAttrs(link) {
+  return `href="${escapeHtml(link.href)}"${link.target ? ` target="${link.target}"` : ""}${link.rel ? ` rel="${link.rel}"` : ""}`;
+}
+
 function shell(content, options = {}) {
   clearInterval(signageTimer);
   signageTimer = null;
   if (options.signage) return `<main>${content}</main>`;
+  const visitLink = publicVisitLink();
+  const inquiryLink = publicInquiryLink();
   return `
     <div class="app-shell">
       <header class="topbar">
@@ -280,8 +323,8 @@ function shell(content, options = {}) {
           </a>
           <nav class="nav" aria-label="主要導覽">
             <a href="#/programs">園所特色</a>
-            <a href="#/visit">預約參觀</a>
-            <a href="#/inquiry">入園諮詢</a>
+            <a ${linkAttrs(visitLink)}>預約參觀</a>
+            <a ${linkAttrs(inquiryLink)}>入園諮詢</a>
             <a href="#/status">查詢送出狀態</a>
             <a href="#/signage">直式看板</a>
           </nav>
@@ -304,6 +347,8 @@ function shell(content, options = {}) {
 }
 
 function landingPage() {
+  const visitLink = publicVisitLink();
+  const inquiryLink = publicInquiryLink();
   return shell(`
     <main>
       <section class="scan-hero">
@@ -321,7 +366,7 @@ function landingPage() {
             </div>
             <div class="actions primary-actions">
               <a class="btn btn-primary" href="#/programs">了解園所特色</a>
-              <a class="btn btn-secondary" href="#/visit">直接預約參觀</a>
+              <a class="btn btn-secondary" ${linkAttrs(visitLink)}>直接預約參觀</a>
               <a class="btn btn-line" href="${escapeHtml(SCHOOL_PROFILE.lineUrl)}" target="_blank" rel="noreferrer">LINE 詢問</a>
             </div>
           </div>
@@ -330,8 +375,8 @@ function landingPage() {
               <span class="phone-dot"></span>
               <h2>三步驟完成預約參觀</h2>
               ${flowStep("1", "了解園所環境與特色", "先看位置、生活常規、活動方向與收費參考。")}
-              ${flowStep("2", "填寫孩子年齡與參觀需求", "留下家長關心事項，讓園方先掌握重點。")}
-              ${flowStep("3", "園方聯繫確認參觀時間", "園方依孩子年齡與需求安排說明。")}
+              ${flowStep("2", "點選預約參觀或入園諮詢", "依需求選擇參觀預約或先留下諮詢問題。")}
+              ${flowStep("3", "填寫表單後，園方將依資料聯繫確認", "園方依孩子年齡與需求安排後續說明。")}
             </div>
           </aside>
         </div>
@@ -427,8 +472,8 @@ function landingPage() {
             <p>建議先預約參觀，讓教職員依孩子年齡、作息與家長需求安排說明。</p>
           </div>
           <div class="actions cta-actions">
-            <a class="btn btn-primary" href="#/visit">預約參觀</a>
-            <a class="btn btn-secondary" href="#/inquiry">填寫入園諮詢</a>
+            <a class="btn btn-primary" ${linkAttrs(visitLink)}>預約參觀</a>
+            <a class="btn btn-secondary" ${linkAttrs(inquiryLink)}>填寫入園諮詢</a>
           </div>
         </div>
       </section>
@@ -458,14 +503,15 @@ function featureCard(icon, title, text) {
 }
 
 function programChoiceCard(program) {
-  const encoded = encodeURIComponent(program.name);
+  const visitLink = publicVisitLink(program.name);
+  const inquiryLink = publicInquiryLink(program.name);
   return `
     <article class="card program-card">
       <h3>${escapeHtml(program.name)}</h3>
       <p class="small">${escapeHtml(program.summary)}</p>
       <div class="program-card-actions">
-        <a class="btn btn-plain" href="#/visit?program=${encoded}">預約參觀</a>
-        <a class="text-link" href="#/inquiry?program=${encoded}">留下意願</a>
+        <a class="btn btn-plain" ${linkAttrs(visitLink)}>預約參觀</a>
+        <a class="text-link" ${linkAttrs(inquiryLink)}>入園諮詢</a>
       </div>
     </article>
   `;
@@ -508,6 +554,7 @@ function checkGroup(name, values) {
 
 function visitPage(success = false) {
   const selectedProgram = routeParams().get("program") || "";
+  const visitLink = publicVisitLink();
   return shell(`
     <main class="form-page">
       <div class="container form-layout">
@@ -523,6 +570,7 @@ function visitPage(success = false) {
           <div class="notice small">${escapeHtml(SCHOOL_PROFILE.privacyNotice)}</div>
         </aside>
         <section class="form-card">
+          ${internalFormNotice("visit", visitLink)}
           ${success ? successBox("已收到您的預約資料", "園方將於 1–2 個工作日內聯繫確認參觀時間。") : visitForm(selectedProgram)}
         </section>
       </div>
@@ -568,6 +616,7 @@ function visitForm(selectedProgram = "") {
 
 function inquiryPage(success = false) {
   const selectedProgram = routeParams().get("program") || "";
+  const inquiryLink = publicInquiryLink();
   return shell(`
     <main class="form-page">
       <div class="container form-layout">
@@ -578,11 +627,25 @@ function inquiryPage(success = false) {
           <div class="notice small">此表單不是正式入學契約，也不涉及任何付款、收據或費用結算。</div>
         </aside>
         <section class="form-card">
+          ${internalFormNotice("inquiry", inquiryLink)}
           ${success ? successBox("已收到您的入園諮詢資料", "園方將於 1–2 個工作日內聯繫確認後續諮詢方式。") : inquiryForm(selectedProgram)}
         </section>
       </div>
     </main>
   `);
+}
+
+function internalFormNotice(type, officialLink) {
+  const buttonText = type === "visit" ? "前往正式預約參觀表單" : "前往正式入園諮詢表單";
+  return `
+    <div class="notice internal-form-notice">
+      <strong>目前此頁為 MVP 測試表單</strong>
+      <p class="small">資料僅儲存在本機瀏覽器 localStorage。正式家長資料建議改用 Google 表單收集，並由 Google Sheets 統一管理。</p>
+      ${SCHOOL_PROFILE.useGoogleFormsForPublicSubmissions
+        ? `<a class="btn btn-secondary" ${linkAttrs(officialLink)}>${buttonText}</a>`
+        : `<p class="small">正式 Google 表單尚未設定，請先使用此頁進行內部流程測試。</p>`}
+    </div>
+  `;
 }
 
 function inquiryForm(selectedProgram = "") {
@@ -779,6 +842,7 @@ function adminPage() {
 
         <div class="notice admin-warning">
           目前資料僅儲存在本機瀏覽器 localStorage，正式使用前需改為雲端資料庫、正式登入權限、備份與個資保護機制。
+          此後台僅顯示 MVP 測試資料。若未來改用 Google 表單，正式回覆請至 Google Sheets 查看。
         </div>
 
         <div class="admin-stats">
@@ -874,6 +938,7 @@ function rowHtml(record) {
 
 function signagePage() {
   clearInterval(signageTimer);
+  // The QR Code should later point either to the landing page URL or directly to the official Google Visit Form URL.
   return shell(`
     <section class="signage">
       <div class="signage-frame">
@@ -884,6 +949,7 @@ function signagePage() {
         <div class="qr-box">
           <div class="qr-placeholder">QR Code</div>
           <h2>掃描 QR Code 填寫參觀需求</h2>
+          <p>線上填寫參觀需求</p>
           <p>園方將盡快聯繫確認時間</p>
         </div>
         <div class="signage-contact">
