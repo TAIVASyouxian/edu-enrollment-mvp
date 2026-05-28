@@ -58,6 +58,7 @@ Routes:
 - Parent information section: `index.html#/programs`
 - Visit booking: `index.html#/visit`
 - Enrollment inquiry: `index.html#/inquiry`
+- Submission status lookup: `index.html#/status`
 - Admin dashboard: `index.html#/admin`
 - Vertical signage preview: `index.html#/signage`
 
@@ -100,7 +101,7 @@ to restore the fake demo records.
 
 ## Important localStorage Warning
 
-目前為 MVP 測試版，資料儲存在本機瀏覽器 `localStorage`，僅供內部展示與流程測試。正式使用前需升級為雲端資料庫、登入權限與備份機制。
+目前資料僅儲存在本機瀏覽器 `localStorage`，正式使用前需改為雲端資料庫、正式登入權限、備份與個資保護機制。
 
 `localStorage` is only suitable for demo/internal testing, sales demos, UX review, and early workflow validation. It is **not suitable for official production use**, because data remains only in the browser, can be cleared by the user, is not centrally backed up, and does not provide proper access control, audit logs, encryption policy, or multi-user staff workflow.
 
@@ -144,6 +145,23 @@ The landing page supports this parent-facing flow:
 2. 填寫孩子年齡與參觀需求
 3. 專人聯繫確認參觀時間
 
+After submitting a visit booking or inquiry, parents receive:
+
+- A readable reference number such as `VISIT-20260528-8F3A` or `INQ-20260528-8F3A`
+- Submitted date/time
+- Expected contact window
+- Next-step explanation
+- A link to `#/status` for checking the submitted record with reference number + phone
+
+Status explanations shown to parents:
+
+- 新提交 = 園方已收到資料，尚未聯繫
+- 已聯繫 = 園方已嘗試聯繫或已完成初步聯繫
+- 已預約參觀 = 已確認參觀時間
+- 已參觀 = 已完成到園參觀
+- 已報名 = 已進入正式報名流程
+- 暫不考慮 = 家長暫時不安排後續
+
 Parent-facing benefits shown on the page:
 
 - 減少電話反覆詢問
@@ -171,4 +189,5 @@ Submitted parent and child data is not shown on public pages or the digital sign
 - Added a 三步驟預約參觀 section and parent-facing benefits.
 - Updated visit booking, enrollment inquiry, footer, and vertical signage copy.
 - Kept admin dashboard with fake demo records only.
+- Added parent submission confirmation, reference numbers, and `#/status` lookup.
 - Kept the app static with `localStorage`; no backend, payment, receipt, bank import, or LINE API was added.

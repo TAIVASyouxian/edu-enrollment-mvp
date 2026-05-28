@@ -77,10 +77,11 @@ const SCHOOL_CONTENT = {
 };
 
 const STORAGE_KEYS = {
-  visits: "happyland_preschool_mvp_visit_bookings_v2",
-  inquiries: "happyland_preschool_mvp_enrollment_inquiries_v2",
+  visits: "happyland_preschool_mvp_visit_bookings_v3",
+  inquiries: "happyland_preschool_mvp_enrollment_inquiries_v3",
   admin: "education_mvp_admin_ok",
-  seeded: "happyland_preschool_mvp_seeded_demo_data_v2"
+  seeded: "happyland_preschool_mvp_seeded_demo_data_v3",
+  lastSubmission: "happyland_preschool_mvp_last_submission"
 };
 
 const programs = [...SCHOOL_CONTENT.programs.map((program) => program.name), "其他"];
@@ -90,10 +91,20 @@ const serviceNeeds = ["幼兒園入園諮詢", "生活常規與適應", "主題�
 const enrollmentTimes = ["立即", "1 個月內", "3 個月內", "下學期", "尚未確定"];
 const visitPeriods = ["上午", "下午", "傍晚", "可由園方建議"];
 const yesNoOptions = ["尚未就讀", "已就讀其他幼兒園", "其他照顧安排"];
+const statusDescriptions = {
+  新提交: "園方已收到資料，尚未聯繫",
+  已聯繫: "園方已嘗試聯繫或已完成初步聯繫",
+  已預約參觀: "已確認參觀時間",
+  已參觀: "已完成到園參觀",
+  等候回覆: "園方已聯繫，等待家長回覆或補充資料",
+  已報名: "已進入正式報名流程",
+  暫不考慮: "家長暫時不安排後續"
+};
 
 const SAMPLE_VISITS = [
   {
     id: "demo-visit-1",
+    referenceNumber: "VISIT-20260527-A1B2",
     submittedAt: "2026/5/27 09:18:00",
     status: "新提交",
     parentName: "示範家長 A",
@@ -114,6 +125,7 @@ const SAMPLE_VISITS = [
   },
   {
     id: "demo-visit-2",
+    referenceNumber: "VISIT-20260526-C3D4",
     submittedAt: "2026/5/26 16:42:00",
     status: "已預約參觀",
     parentName: "示範家長 B",
@@ -137,6 +149,7 @@ const SAMPLE_VISITS = [
 const SAMPLE_INQUIRIES = [
   {
     id: "demo-inquiry-1",
+    referenceNumber: "INQ-20260527-E5F6",
     submittedAt: "2026/5/27 11:05:00",
     status: "已聯繫",
     parentName: "示範家長 C",
@@ -156,6 +169,7 @@ const SAMPLE_INQUIRIES = [
   },
   {
     id: "demo-inquiry-2",
+    referenceNumber: "INQ-20260525-7A8B",
     submittedAt: "2026/5/25 14:30:00",
     status: "新提交",
     parentName: "示範家長 D",
@@ -214,6 +228,19 @@ function nowText() {
   return new Date().toLocaleString("zh-TW", { hour12: false });
 }
 
+function referenceDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}${month}${day}`;
+}
+
+function generateReference(prefix) {
+  const token = Math.random().toString(16).slice(2, 6).toUpperCase();
+  return `${prefix}-${referenceDate()}-${token}`;
+}
+
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -255,6 +282,7 @@ function shell(content, options = {}) {
             <a href="#/programs">園所特色</a>
             <a href="#/visit">預約參觀</a>
             <a href="#/inquiry">入園諮詢</a>
+            <a href="#/status">查詢送出狀態</a>
             <a href="#/signage">直式看板</a>
           </nav>
         </div>
@@ -268,7 +296,7 @@ function shell(content, options = {}) {
             <p class="small">設立別：${escapeHtml(SCHOOL_PROFILE.type)}｜${escapeHtml(SCHOOL_PROFILE.capacity)}｜收費參考：${escapeHtml(SCHOOL_PROFILE.tuitionReference)}｜公開紀錄：${escapeHtml(SCHOOL_PROFILE.violationRecord)}</p>
             <p class="small">隱私提醒：${escapeHtml(SCHOOL_PROFILE.privacyNotice)}</p>
           </div>
-          <a class="text-link" href="#/admin">教職員入口</a>
+          <a class="text-link" href="#/admin">管理入口</a>
         </div>
       </footer>
     </div>
@@ -486,7 +514,7 @@ function visitPage(success = false) {
         <aside class="form-intro-card">
           <p class="eyebrow">到校參觀預約</p>
           <h1>預約參觀</h1>
-          <p>留下方便聯繫的資訊後，園方會依孩子年齡、家長關心事項與希望參觀時段，安排園所環境、生活作息與課程方向說明。</p>
+          <p>留下方便聯繫的資訊後，園方會依孩子年齡、家長關心事項與希望參觀時段，安排園所環境、生活作息與課程方向說明。送出資料代表園方收到參觀需求，並非正式入園或錄取確認。</p>
           <div class="mini-flow">
             ${flowStep("1", "填寫資料", "約 1-2 分鐘完成。")}
             ${flowStep("2", "園方聯繫確認", "以電話或 LINE 回覆參觀時間。")}
@@ -495,7 +523,7 @@ function visitPage(success = false) {
           <div class="notice small">${escapeHtml(SCHOOL_PROFILE.privacyNotice)}</div>
         </aside>
         <section class="form-card">
-          ${success ? successBox("已收到您的預約資料，我們將盡快與您聯繫確認參觀時間。", "返回首頁", "#/") : visitForm(selectedProgram)}
+          ${success ? successBox("已收到您的預約資料", "園方將於 1–2 個工作日內聯繫確認參觀時間。") : visitForm(selectedProgram)}
         </section>
       </div>
     </main>
@@ -546,11 +574,11 @@ function inquiryPage(success = false) {
         <aside class="form-intro-card">
           <p class="eyebrow">入園諮詢</p>
           <h1>入園諮詢</h1>
-          <p>如果還不確定是否預約參觀，也可以先留下孩子年齡、預計入園時間與想了解的問題。園方會依需求協助回覆，讓家長更安心評估。</p>
+          <p>如果還不確定是否預約參觀，也可以先留下孩子年齡、預計入園時間與想了解的問題。送出資料僅代表園方收到諮詢需求，正式入園仍需由園方聯繫後依後續流程確認。</p>
           <div class="notice small">此表單不是正式入學契約，也不涉及任何付款、收據或費用結算。</div>
         </aside>
         <section class="form-card">
-          ${success ? successBox("已收到您的入園諮詢資料，我們將盡快與您聯繫。", "繼續預約參觀", "#/visit") : inquiryForm(selectedProgram)}
+          ${success ? successBox("已收到您的入園諮詢資料", "園方將於 1–2 個工作日內聯繫確認後續諮詢方式。") : inquiryForm(selectedProgram)}
         </section>
       </div>
     </main>
@@ -595,18 +623,117 @@ function inquiryForm(selectedProgram = "") {
   `;
 }
 
-function successBox(message, actionText, href) {
+function successBox(message, nextText) {
+  const submission = readLastSubmission();
   return `
     <div class="success-stack">
-      <div class="success">${escapeHtml(message)}</div>
-      <a class="btn btn-primary" href="${href}">${escapeHtml(actionText)}</a>
-      <a class="btn btn-line" href="${escapeHtml(SCHOOL_PROFILE.lineUrl)}" target="_blank" rel="noreferrer">加入 LINE 補充問題</a>
+      <div class="success">
+        <h2>${escapeHtml(message)}</h2>
+        <p>查詢編號：<strong>${escapeHtml(submission.referenceNumber || "-")}</strong></p>
+        <p>送出時間：${escapeHtml(submission.submittedAt || "-")}</p>
+      </div>
+      <div class="next-card">
+        <h3>接下來會怎麼做</h3>
+        <p>${escapeHtml(nextText)}</p>
+        <p class="small">此表單不是正式入園申請或錄取通知。正式入園需經園方聯繫、確認資料與後續程序。</p>
+      </div>
+      <div class="actions success-actions">
+        <a class="btn btn-primary" href="#/">返回首頁</a>
+        <a class="btn btn-line" href="${escapeHtml(SCHOOL_PROFILE.lineUrl)}" target="_blank" rel="noreferrer">加入 LINE 補充問題</a>
+        <a class="btn btn-secondary" href="#/status?ref=${encodeURIComponent(submission.referenceNumber || "")}&phone=${encodeURIComponent(submission.phone || "")}">查看我剛剛送出的資料</a>
+      </div>
+      <a class="text-link" href="#/status">查詢送出狀態</a>
     </div>
   `;
 }
 
 function inputField(name, label, type, required, className = "field") {
   return `<label class="${className}">${label}<input name="${name}" type="${type}" ${required ? "required" : ""} /></label>`;
+}
+
+function statusPage(result = null, error = "") {
+  const params = routeParams();
+  const ref = params.get("ref") || "";
+  const phone = params.get("phone") || "";
+  const autoResult = ref && phone ? findSubmission(ref, phone) : null;
+  const displayResult = result || autoResult;
+  const displayError = error || (ref && phone && !autoResult ? "查無符合的資料，請確認查詢編號與聯絡電話是否與送出時相同。" : "");
+
+  return shell(`
+    <main class="form-page">
+      <div class="container form-layout">
+        <aside class="form-intro-card">
+          <p class="eyebrow">Submission Status</p>
+          <h1>查詢送出資料</h1>
+          <p>請輸入送出後取得的查詢編號與聯絡電話。系統只會顯示符合這組資料的單筆紀錄，不會公開其他家長資料。</p>
+          <div class="notice small">狀態說明：${statusExplanationList()}</div>
+        </aside>
+        <section class="form-card">
+          <form id="statusForm" class="form-grid">
+            <label class="field">查詢編號
+              <input name="referenceNumber" type="text" value="${escapeHtml(ref)}" placeholder="例如 VISIT-20260528-8F3A" required />
+            </label>
+            <label class="field">聯絡電話
+              <input name="phone" type="tel" value="${escapeHtml(phone)}" required />
+            </label>
+            <button class="btn btn-primary field full" type="submit">查詢送出狀態</button>
+          </form>
+          ${displayError ? `<div class="notice status-error">${escapeHtml(displayError)}</div>` : ""}
+          ${displayResult ? parentSubmissionDetail(displayResult) : ""}
+        </section>
+      </div>
+    </main>
+  `);
+}
+
+function statusExplanationList() {
+  return Object.entries(statusDescriptions)
+    .map(([status, description]) => `${status} = ${description}`)
+    .join("；");
+}
+
+function findSubmission(referenceNumber, phone) {
+  const normalizedRef = referenceNumber.trim().toUpperCase();
+  const normalizedPhone = normalizePhone(phone);
+  const allRecords = [
+    ...readStore(STORAGE_KEYS.visits).map((record) => ({ ...record, typeLabel: "預約參觀" })),
+    ...readStore(STORAGE_KEYS.inquiries).map((record) => ({ ...record, typeLabel: "入園諮詢" }))
+  ];
+  return allRecords.find((record) =>
+    String(record.referenceNumber || "").toUpperCase() === normalizedRef &&
+    normalizePhone(record.phone) === normalizedPhone
+  );
+}
+
+function normalizePhone(phone = "") {
+  return String(phone).replace(/\D/g, "");
+}
+
+function parentSubmissionDetail(record) {
+  return `
+    <div class="status-result">
+      <div class="detail-title">
+        <div>
+          <p class="eyebrow">${escapeHtml(record.typeLabel)}</p>
+          <h2>${escapeHtml(record.referenceNumber)}</h2>
+        </div>
+        <span class="status">${escapeHtml(record.status)}</span>
+      </div>
+      <p class="small">${escapeHtml(statusDescriptions[record.status] || "園方處理中")}</p>
+      <div class="detail-grid">
+        ${detailRow("送出時間", record.submittedAt)}
+        ${detailRow("家長姓名", record.parentName)}
+        ${detailRow("聯絡電話", record.phone)}
+        ${detailRow("孩子姓名", record.childName)}
+        ${detailRow("孩子年齡", record.childAge)}
+        ${detailRow("預計入園時間", record.expectedEnrollment)}
+        ${detailRow("希望參觀時間", record.visitDate ? `${record.visitDate} ${record.visitTime || ""}` : "-")}
+        ${detailRow("最關心的問題", (record.concerns || []).join("、"))}
+        ${detailRow("備註／需求", record.notes || record.questions)}
+      </div>
+      <div class="notice small">園方將於 1–2 個工作日內聯繫確認。此查詢結果僅供確認資料已送出，不代表正式入園或錄取。</div>
+    </div>
+  `;
 }
 
 function adminPage() {
@@ -651,7 +778,7 @@ function adminPage() {
         </div>
 
         <div class="notice admin-warning">
-          目前為 MVP 測試版，資料儲存在本機瀏覽器 localStorage，僅供內部展示與流程測試。正式使用前需升級為雲端資料庫、登入權限與備份機制。
+          目前資料僅儲存在本機瀏覽器 localStorage，正式使用前需改為雲端資料庫、正式登入權限、備份與個資保護機制。
         </div>
 
         <div class="admin-stats">
@@ -675,7 +802,7 @@ function adminPage() {
               <button id="exportCsv" class="btn btn-secondary" type="button">匯出 CSV</button>
             </div>
             <div class="admin-tools">
-              <input id="searchInput" type="search" placeholder="搜尋家長姓名／電話／孩子姓名" />
+              <input id="searchInput" type="search" placeholder="搜尋查詢編號／家長姓名／電話／孩子姓名" />
               <select id="programFilter"><option value="">全部重點</option>${formOption(programs)}</select>
               <select id="statusFilter"><option value="">全部狀態</option>${formOption(statuses)}</select>
             </div>
@@ -709,6 +836,7 @@ function adminTable(records) {
         <thead>
           <tr>
             <th>提交時間</th>
+            <th>查詢編號</th>
             <th>家長姓名</th>
             <th>孩子年齡</th>
             <th>預計入園時間</th>
@@ -731,6 +859,7 @@ function rowHtml(record) {
   return `
     <tr data-id="${escapeHtml(record.id)}">
       <td>${escapeHtml(record.submittedAt)}</td>
+      <td><strong>${escapeHtml(record.referenceNumber || "-")}</strong></td>
       <td><strong>${escapeHtml(record.parentName)}</strong><br><span class="small">${escapeHtml(record.phone)}</span></td>
       <td>${escapeHtml(record.childAge)} 歲</td>
       <td>${escapeHtml(record.expectedEnrollment || "-")}</td>
@@ -787,7 +916,7 @@ function bindEvents() {
       event.preventDefault();
       const data = formData(event.currentTarget);
       data.concerns = Array.from(event.currentTarget.querySelectorAll("input[name='concerns']:checked")).map((x) => x.value);
-      saveRecord(STORAGE_KEYS.visits, data);
+      saveRecord(STORAGE_KEYS.visits, data, "VISIT");
       render(visitPage(true));
     });
   }
@@ -798,7 +927,7 @@ function bindEvents() {
       event.preventDefault();
       const data = formData(event.currentTarget);
       data.concerns = Array.from(event.currentTarget.querySelectorAll("input[name='concerns']:checked")).map((x) => x.value);
-      saveRecord(STORAGE_KEYS.inquiries, data);
+      saveRecord(STORAGE_KEYS.inquiries, data, "INQ");
       render(inquiryPage(true));
     });
   }
@@ -840,6 +969,15 @@ function bindEvents() {
   document.querySelector("#programFilter")?.addEventListener("change", filterAdmin);
   document.querySelector("#statusFilter")?.addEventListener("change", filterAdmin);
   document.querySelector("#exportCsv")?.addEventListener("click", exportCurrentCsv);
+  const statusForm = document.querySelector("#statusForm");
+  if (statusForm) {
+    statusForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = formData(event.currentTarget);
+      const result = findSubmission(data.referenceNumber, data.phone);
+      render(statusPage(result, result ? "" : "查無符合的資料，請確認查詢編號與聯絡電話是否與送出時相同。"));
+    });
+  }
   bindDetailButtons();
 }
 
@@ -847,17 +985,37 @@ function formData(form) {
   return Object.fromEntries(new FormData(form).entries());
 }
 
-function saveRecord(key, data) {
+function saveRecord(key, data, referencePrefix) {
   const records = readStore(key);
-  records.unshift({
+  const record = {
     id: uid(),
+    referenceNumber: generateReference(referencePrefix),
     submittedAt: nowText(),
     status: "新提交",
     priority: calculatePriority(data),
     internalNotes: "",
     ...data
-  });
+  };
+  records.unshift(record);
   writeStore(key, records);
+  writeLastSubmission(record, key === STORAGE_KEYS.visits ? "visit" : "inquiry");
+}
+
+function writeLastSubmission(record, type) {
+  localStorage.setItem(STORAGE_KEYS.lastSubmission, JSON.stringify({
+    type,
+    referenceNumber: record.referenceNumber,
+    phone: record.phone,
+    submittedAt: record.submittedAt
+  }));
+}
+
+function readLastSubmission() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.lastSubmission) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 function calculatePriority(record) {
@@ -872,7 +1030,7 @@ function filterAdmin() {
   const program = document.querySelector("#programFilter").value;
   const status = document.querySelector("#statusFilter").value;
   const filtered = records.filter((record) => {
-    const haystack = `${record.parentName} ${record.phone} ${record.childName}`.toLowerCase();
+    const haystack = `${record.referenceNumber || ""} ${record.parentName} ${record.phone} ${record.childName}`.toLowerCase();
     return (!query || haystack.includes(query)) && (!program || record.program === program) && (!status || record.status === status);
   });
   document.querySelector("#adminTable").innerHTML = adminTable(filtered);
@@ -920,10 +1078,12 @@ function showDetail(id) {
         <div>
           <p class="eyebrow">Record Detail</p>
           <h2>${escapeHtml(record.parentName)}｜${escapeHtml(record.childName)}</h2>
+          <p class="small">查詢編號：${escapeHtml(record.referenceNumber || "-")}</p>
         </div>
         <span class="status">${escapeHtml(record.status)}</span>
       </div>
       <div class="detail-grid">
+        ${detailRow("查詢編號", record.referenceNumber)}
         ${detailRow("提交時間", record.submittedAt)}
         ${detailRow("想了解的重點", record.program)}
         ${detailRow("家長姓名", record.parentName)}
@@ -973,11 +1133,11 @@ function saveDetail() {
 function exportCurrentCsv() {
   const records = readStore(adminTab === "visits" ? STORAGE_KEYS.visits : STORAGE_KEYS.inquiries);
   const headers = adminTab === "visits"
-    ? ["提交時間", "家長姓名", "電話", "LINE ID", "孩子姓名", "孩子年齡", "是否已就讀其他幼兒園", "預計入園時間", "想了解的重點", "參觀日期", "參觀時段", "目前照顧狀態", "最關心的問題", "備註", "聯絡狀態", "優先度", "內部備註"]
-    : ["提交時間", "家長姓名", "電話", "LINE ID", "孩子姓名", "孩子年齡", "是否已就讀其他幼兒園", "預計入園時間", "想了解的重點", "需要的服務", "最關心的問題", "家長需求／問題", "聯絡狀態", "優先度", "內部備註"];
+    ? ["查詢編號", "提交時間", "家長姓名", "電話", "LINE ID", "孩子姓名", "孩子年齡", "是否已就讀其他幼兒園", "預計入園時間", "想了解的重點", "參觀日期", "參觀時段", "目前照顧狀態", "最關心的問題", "備註", "聯絡狀態", "優先度", "內部備註"]
+    : ["查詢編號", "提交時間", "家長姓名", "電話", "LINE ID", "孩子姓名", "孩子年齡", "是否已就讀其他幼兒園", "預計入園時間", "想了解的重點", "需要的服務", "最關心的問題", "家長需求／問題", "聯絡狀態", "優先度", "內部備註"];
   const rows = records.map((record) => adminTab === "visits"
-    ? [record.submittedAt, record.parentName, record.phone, record.lineId, record.childName, record.childAge, record.hasCurrentKindergarten, record.expectedEnrollment, record.program, record.visitDate, record.visitTime, record.currentSchool, (record.concerns || []).join("、"), record.notes, record.status, record.priority || calculatePriority(record), record.internalNotes]
-    : [record.submittedAt, record.parentName, record.phone, record.lineId, record.childName, record.childAge, record.hasCurrentKindergarten, record.expectedEnrollment, record.program, record.requiredService, (record.concerns || []).join("、"), record.questions, record.status, record.priority || calculatePriority(record), record.internalNotes]
+    ? [record.referenceNumber, record.submittedAt, record.parentName, record.phone, record.lineId, record.childName, record.childAge, record.hasCurrentKindergarten, record.expectedEnrollment, record.program, record.visitDate, record.visitTime, record.currentSchool, (record.concerns || []).join("、"), record.notes, record.status, record.priority || calculatePriority(record), record.internalNotes]
+    : [record.referenceNumber, record.submittedAt, record.parentName, record.phone, record.lineId, record.childName, record.childAge, record.hasCurrentKindergarten, record.expectedEnrollment, record.program, record.requiredService, (record.concerns || []).join("、"), record.questions, record.status, record.priority || calculatePriority(record), record.internalNotes]
   );
   const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
@@ -1007,6 +1167,7 @@ function router() {
   }
   else if (current === "/visit") render(visitPage());
   else if (current === "/inquiry") render(inquiryPage());
+  else if (current === "/status") render(statusPage());
   else if (current === "/admin") render(adminPage());
   else if (current === "/signage") render(signagePage());
   else setRoute("/");

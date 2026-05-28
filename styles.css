@@ -677,6 +677,40 @@ textarea:focus {
   gap: 12px;
 }
 
+.success h2,
+.success p {
+  margin: 0 0 8px;
+}
+
+.success h2 {
+  color: var(--primary-dark);
+}
+
+.next-card,
+.status-result {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: #fffdf9;
+}
+
+.next-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.success-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.status-error {
+  border-color: rgba(184, 80, 66, 0.28);
+  color: var(--danger);
+  background: #fff1ee;
+}
+
 .admin-page {
   padding: 28px 0 56px;
 }
@@ -783,7 +817,7 @@ textarea:focus {
 
 table {
   width: 100%;
-  min-width: 760px;
+  min-width: 980px;
   border-collapse: collapse;
 }
 
@@ -1025,6 +1059,7 @@ th {
   .actions,
   .primary-actions,
   .cta-actions,
+  .success-actions,
   .form-grid,
   .checks,
   .admin-tools,
