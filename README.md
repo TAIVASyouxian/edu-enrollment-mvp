@@ -36,6 +36,8 @@ This version includes:
 
 This version intentionally does **not** include payment features, receipt PDFs, bank CSV import, accounting reconciliation, LINE API integration, or a real backend.
 
+Official parent submissions are currently handled through Google Forms, while the built-in localStorage forms remain for demo/internal testing only.
+
 ## File Structure
 
 ```text
@@ -136,6 +138,34 @@ const SCHOOL_CONTENT = {
   signageFeatures: [...]
 };
 ```
+
+## Current Google Forms Setup
+
+This MVP now uses Google Forms for official parent-facing submissions.
+
+- Google Forms = parent-facing official forms
+- Google Sheets = staff response tables
+- localStorage = demo/internal testing only
+
+Current setup:
+
+- Public "預約參觀" CTA opens the official Google Visit Booking Form.
+- Public "入園諮詢" CTA opens the official Google Enrollment Inquiry Form.
+- Internal demo routes remain available for testing:
+  - `#/visit`
+  - `#/inquiry`
+  - `#/admin`
+  - `#/status`
+
+The Google Forms URLs are configured in `app.js`:
+
+```js
+googleVisitFormUrl: "https://forms.gle/3tC6rLtGcDry6oGE9",
+googleInquiryFormUrl: "https://forms.gle/GPNRqNYPSJWPJr1x5",
+useGoogleFormsForPublicSubmissions: true
+```
+
+Do not add real parent, child, teacher, bank, payment, or internal private data to the static MVP demo records.
 
 ## Parent Flow
 
