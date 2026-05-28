@@ -19,8 +19,8 @@ const SCHOOL_PROFILE = {
   // 2. Paste the real published form URLs below.
   // 3. Set useGoogleFormsForPublicSubmissions to true so public CTAs open Google Forms.
   googleVisitFormUrl: "https://forms.gle/3tC6rLtGcDry6oGE9",
-  googleInquiryFormUrl: "PASTE_GOOGLE_INQUIRY_FORM_URL_HERE",
-  useGoogleFormsForPublicSubmissions: false,
+  googleInquiryFormUrl: "https://forms.gle/GPNRqNYPSJWPJr1x5",
+  useGoogleFormsForPublicSubmissions: true,
   address: "新北市樹林區八德街118號1、2、3樓及120號1樓",
   officeHours: "請填入園所服務時間",
   adminPin: "1234",
