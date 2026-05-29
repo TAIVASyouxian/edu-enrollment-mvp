@@ -341,7 +341,7 @@ p {
 }
 
 .photo-card-placeholder::before {
-  content: "照片預留區";
+  content: "園所照片即將更新";
   align-self: start;
   justify-self: start;
   padding: 6px 9px;

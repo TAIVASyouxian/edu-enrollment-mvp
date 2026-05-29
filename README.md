@@ -1,6 +1,6 @@
 # Education Enrollment & Visit Booking MVP
 
-Static MVP demo for **新北市私立快樂地幼兒園**. The page is designed for parents who scan a QR code, read public-facing school information, book a campus visit, and submit an enrollment inquiry.
+Static Phase 1 MVP for **新北市私立快樂地幼兒園**. The public page is a parent-facing enrollment / visit-booking landing page. Parents read school information, click `預約參觀` or `入園諮詢`, and submit official information through Google Forms.
 
 All user-facing UI text is in Traditional Chinese. Code variables remain in English.
 
@@ -27,12 +27,12 @@ This version includes:
 - School introduction
 - Preschool-focused program information
 - Three-step visit booking flow
-- Campus visit booking form
-- Enrollment inquiry form
-- Simple staff admin dashboard
-- Vertical digital signage preview
-- CSV export for demo review
-- Reset demo data button
+- Parent-facing Google Forms CTAs for visit booking and enrollment inquiry
+- Internal localStorage demo forms for workflow testing
+- Internal staff demo dashboard
+- Internal vertical digital signage preview
+- CSV export for demo review only
+- Reset demo data button for internal testing
 
 This version intentionally does **not** include payment features, receipt PDFs, bank CSV import, accounting reconciliation, LINE API integration, or a real backend.
 
@@ -58,11 +58,11 @@ Routes:
 
 - Public landing page: `index.html#/`
 - Parent information section: `index.html#/programs`
-- Visit booking: `index.html#/visit`
-- Enrollment inquiry: `index.html#/inquiry`
-- Submission status lookup: `index.html#/status`
-- Admin dashboard: `index.html#/admin`
-- Vertical signage preview: `index.html#/signage`
+- Internal demo visit booking form: `index.html#/visit`
+- Internal demo enrollment inquiry form: `index.html#/inquiry`
+- Internal demo submission status lookup: `index.html#/status`
+- Internal demo admin dashboard: `index.html#/admin`
+- Internal signage preview: `index.html#/signage`
 
 ## Admin Access
 
@@ -80,7 +80,7 @@ Edit it in `app.js`:
 adminPin: "1234"
 ```
 
-This PIN gate is only for demo separation between public and staff pages. It is not production authentication.
+This PIN gate is only for demo separation between public and internal testing pages. It is not production authentication.
 
 ## Demo Data
 
@@ -172,25 +172,8 @@ Do not add real parent, child, teacher, bank, payment, or internal private data 
 The landing page supports this parent-facing flow:
 
 1. 了解園所環境與特色
-2. 填寫孩子年齡與參觀需求
-3. 專人聯繫確認參觀時間
-
-After submitting a visit booking or inquiry, parents receive:
-
-- A readable reference number such as `VISIT-20260528-8F3A` or `INQ-20260528-8F3A`
-- Submitted date/time
-- Expected contact window
-- Next-step explanation
-- A link to `#/status` for checking the submitted record with reference number + phone
-
-Status explanations shown to parents:
-
-- 新提交 = 園方已收到資料，尚未聯繫
-- 已聯繫 = 園方已嘗試聯繫或已完成初步聯繫
-- 已預約參觀 = 已確認參觀時間
-- 已參觀 = 已完成到園參觀
-- 已報名 = 已進入正式報名流程
-- 暫不考慮 = 家長暫時不安排後續
+2. 點選 `預約參觀` 或 `入園諮詢`
+3. 在 Google Forms 填寫資料後，由園方依資料聯繫確認
 
 Parent-facing benefits shown on the page:
 
@@ -207,7 +190,32 @@ The app displays this simple privacy note:
 本頁僅用於預約參觀與報名諮詢，所填資料僅供園方聯繫使用，不會公開顯示。
 ```
 
-Submitted parent and child data is not shown on public pages or the digital signage page.
+Submitted parent and child data is not shown on public pages. Official submitted data lives in Google Forms / Google Sheets. The localStorage demo status lookup and admin dashboard do not show Google Form submissions.
+
+## Internal Demo Routes
+
+These routes are intentionally kept for internal testing and demonstration only:
+
+- `#/visit`: localStorage visit booking demo form
+- `#/inquiry`: localStorage inquiry demo form
+- `#/status`: localStorage demo lookup only; it cannot find Google Forms submissions
+- `#/admin`: localStorage demo admin dashboard only; official responses should be checked in Google Sheets
+- `#/signage`: lobby signage preview for display planning
+
+Do not use these internal routes for official parent data unless the project is upgraded to a secure backend database, real authentication, backup, access control, and privacy protection.
+
+## Phase 2 Payment Plan
+
+Payment is intentionally out of scope for Phase 1. If payment is needed later, create a separate Phase 2 plan with:
+
+- Fixed official domain
+- Backend service
+- Payment provider integration
+- Callback URL
+- Payment status database
+- Receipt / confirmation flow
+- Reconciliation workflow
+- Refund workflow
 
 ## Changelog
 
@@ -220,4 +228,5 @@ Submitted parent and child data is not shown on public pages or the digital sign
 - Updated visit booking, enrollment inquiry, footer, and vertical signage copy.
 - Kept admin dashboard with fake demo records only.
 - Added parent submission confirmation, reference numbers, and `#/status` lookup.
+- Moved official parent submissions to Google Forms and hid internal/demo routes from public navigation.
 - Kept the app static with `localStorage`; no backend, payment, receipt, bank import, or LINE API was added.

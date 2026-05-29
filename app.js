@@ -12,8 +12,9 @@ const SCHOOL_PROFILE = {
   tuitionReference: "114學年度月收費 $16,167",
   violationRecord: "無裁罰紀錄",
   phone: "(02)8685-8888",
-  lineLabel: "@happyland-demo",
-  lineUrl: "https://line.me/R/ti/p/@school-line",
+  lineLabel: "",
+  lineUrl: "",
+  showLineCta: false,
   // Future Google Forms setup:
   // 1. Create official Google Forms for visit booking and enrollment inquiry.
   // 2. Paste the real published form URLs below.
@@ -22,7 +23,7 @@ const SCHOOL_PROFILE = {
   googleInquiryFormUrl: "https://forms.gle/GPNRqNYPSJWPJr1x5",
   useGoogleFormsForPublicSubmissions: true,
   address: "新北市樹林區八德街118號1、2、3樓及120號1樓",
-  officeHours: "請填入園所服務時間",
+  officeHours: "",
   adminPin: "1234",
   privacyNotice:
     "本頁僅用於預約參觀與報名諮詢，所填資料僅供園方聯繫使用，不會公開顯示。"
@@ -70,11 +71,11 @@ const SCHOOL_CONTENT = {
   ],
   photos: [
     // Later: replace imagePath with real public photo paths, e.g. "images/exterior.jpg".
-    { title: "園所外觀照片", text: "可放置園所入口或外觀照片，協助家長確認到訪位置。", imagePath: "" },
-    { title: "教室環境照片", text: "可放置教室採光、收納與孩子活動動線照片。", imagePath: "" },
-    { title: "活動照片", text: "可放置主題活動、團體互動或日常作息照片。", imagePath: "" },
-    { title: "閱讀角落照片", text: "可放置閱讀區、故事共讀或安靜角落照片。", imagePath: "" },
-    { title: "孩子作品照片", text: "可放置作品牆、手作成果或學習歷程展示照片。", imagePath: "" }
+    { title: "園所外觀照片", text: "園所照片即將更新，未來將呈現入口與到訪動線。", imagePath: "" },
+    { title: "教室環境照片", text: "園所照片即將更新，未來將呈現教室採光與活動空間。", imagePath: "" },
+    { title: "活動照片", text: "園所照片即將更新，未來將呈現主題活動與日常互動。", imagePath: "" },
+    { title: "閱讀角落照片", text: "園所照片即將更新，未來將呈現閱讀與安靜角落。", imagePath: "" },
+    { title: "孩子作品照片", text: "園所照片即將更新，未來將呈現作品與學習歷程展示。", imagePath: "" }
   ],
   signageFeatures: [
     ["看", "先了解園所特色", "掃描 QR Code 看位置、課程方向與收費參考。"],
@@ -307,6 +308,11 @@ function linkAttrs(link) {
   return `href="${escapeHtml(link.href)}"${link.target ? ` target="${link.target}"` : ""}${link.rel ? ` rel="${link.rel}"` : ""}`;
 }
 
+function lineCta(label = "LINE 詢問", className = "btn btn-line") {
+  if (!SCHOOL_PROFILE.showLineCta || !SCHOOL_PROFILE.lineUrl) return "";
+  return `<a class="${className}" href="${escapeHtml(SCHOOL_PROFILE.lineUrl)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`;
+}
+
 function shell(content, options = {}) {
   clearInterval(signageTimer);
   signageTimer = null;
@@ -322,11 +328,11 @@ function shell(content, options = {}) {
             <span>${escapeHtml(SCHOOL_PROFILE.shortName)}</span>
           </a>
           <nav class="nav" aria-label="主要導覽">
+            <a href="#/">首頁</a>
             <a href="#/programs">園所特色</a>
             <a ${linkAttrs(visitLink)}>預約參觀</a>
             <a ${linkAttrs(inquiryLink)}>入園諮詢</a>
-            <a href="#/status">查詢送出狀態</a>
-            <a href="#/signage">直式看板</a>
+            ${lineCta("LINE 詢問", "nav-line")}
           </nav>
         </div>
       </header>
@@ -339,7 +345,6 @@ function shell(content, options = {}) {
             <p class="small">設立別：${escapeHtml(SCHOOL_PROFILE.type)}｜${escapeHtml(SCHOOL_PROFILE.capacity)}｜收費參考：${escapeHtml(SCHOOL_PROFILE.tuitionReference)}｜公開紀錄：${escapeHtml(SCHOOL_PROFILE.violationRecord)}</p>
             <p class="small">隱私提醒：${escapeHtml(SCHOOL_PROFILE.privacyNotice)}</p>
           </div>
-          <a class="text-link" href="#/admin">管理入口</a>
         </div>
       </footer>
     </div>
@@ -365,9 +370,10 @@ function landingPage() {
               <span>公開紀錄：${escapeHtml(SCHOOL_PROFILE.violationRecord)}</span>
             </div>
             <div class="actions primary-actions">
-              <a class="btn btn-primary" href="#/programs">了解園所特色</a>
-              <a class="btn btn-secondary" ${linkAttrs(visitLink)}>直接預約參觀</a>
-              <a class="btn btn-line" href="${escapeHtml(SCHOOL_PROFILE.lineUrl)}" target="_blank" rel="noreferrer">LINE 詢問</a>
+              <a class="btn btn-primary" ${linkAttrs(visitLink)}>預約參觀</a>
+              <a class="btn btn-secondary" ${linkAttrs(inquiryLink)}>入園諮詢</a>
+              <a class="btn btn-plain" href="#/programs">了解園所特色</a>
+              ${lineCta("LINE 詢問")}
             </div>
           </div>
           <aside class="scan-card" aria-label="家長流程">
@@ -559,8 +565,8 @@ function visitPage(success = false) {
     <main class="form-page">
       <div class="container form-layout">
         <aside class="form-intro-card">
-          <p class="eyebrow">到校參觀預約</p>
-          <h1>預約參觀</h1>
+          <p class="eyebrow">內部測試表單</p>
+          <h1>預約參觀 Demo</h1>
           <p>留下方便聯繫的資訊後，園方會依孩子年齡、家長關心事項與希望參觀時段，安排園所環境、生活作息與課程方向說明。送出資料代表園方收到參觀需求，並非正式入園或錄取確認。</p>
           <div class="mini-flow">
             ${flowStep("1", "填寫資料", "約 1-2 分鐘完成。")}
@@ -621,8 +627,8 @@ function inquiryPage(success = false) {
     <main class="form-page">
       <div class="container form-layout">
         <aside class="form-intro-card">
-          <p class="eyebrow">入園諮詢</p>
-          <h1>入園諮詢</h1>
+          <p class="eyebrow">內部測試表單</p>
+          <h1>入園諮詢 Demo</h1>
           <p>如果還不確定是否預約參觀，也可以先留下孩子年齡、預計入園時間與想了解的問題。送出資料僅代表園方收到諮詢需求，正式入園仍需由園方聯繫後依後續流程確認。</p>
           <div class="notice small">此表單不是正式入學契約，也不涉及任何付款、收據或費用結算。</div>
         </aside>
@@ -702,7 +708,7 @@ function successBox(message, nextText) {
       </div>
       <div class="actions success-actions">
         <a class="btn btn-primary" href="#/">返回首頁</a>
-        <a class="btn btn-line" href="${escapeHtml(SCHOOL_PROFILE.lineUrl)}" target="_blank" rel="noreferrer">加入 LINE 補充問題</a>
+        ${lineCta("加入 LINE 補充問題")}
         <a class="btn btn-secondary" href="#/status?ref=${encodeURIComponent(submission.referenceNumber || "")}&phone=${encodeURIComponent(submission.phone || "")}">查看我剛剛送出的資料</a>
       </div>
       <a class="text-link" href="#/status">查詢送出狀態</a>
@@ -726,12 +732,16 @@ function statusPage(result = null, error = "") {
     <main class="form-page">
       <div class="container form-layout">
         <aside class="form-intro-card">
-          <p class="eyebrow">Submission Status</p>
-          <h1>查詢送出資料</h1>
-          <p>請輸入送出後取得的查詢編號與聯絡電話。系統只會顯示符合這組資料的單筆紀錄，不會公開其他家長資料。</p>
+          <p class="eyebrow">內部測試查詢</p>
+          <h1>查詢 Demo 送出資料</h1>
+          <p>此頁只查詢本機瀏覽器 localStorage 的內部測試資料，不會查到 Google Forms / Google Sheets 的正式家長回覆。</p>
           <div class="notice small">狀態說明：${statusExplanationList()}</div>
         </aside>
         <section class="form-card">
+          <div class="notice internal-form-notice">
+            <strong>內部測試用途</strong>
+            <p class="small">正式家長資料目前由 Google Forms 收集，園方需至 Google Sheets 查看正式回覆。此頁僅供測試 localStorage 流程。</p>
+          </div>
           <form id="statusForm" class="form-grid">
             <label class="field">查詢編號
               <input name="referenceNumber" type="text" value="${escapeHtml(ref)}" placeholder="例如 VISIT-20260528-8F3A" required />
@@ -806,8 +816,8 @@ function adminPage() {
         <div class="container">
           <section class="form-card admin-gate">
             <p class="eyebrow">Staff Only</p>
-            <h1>教職員入口</h1>
-            <p class="small">請輸入管理 PIN 碼。MVP 預設為 1234，可在 app.js 的 SCHOOL_PROFILE.adminPin 修改。</p>
+            <h1>內部測試管理入口</h1>
+            <p class="small">此入口僅供檢視 localStorage demo 資料。正式 Google Forms 回覆請至 Google Sheets 查看。MVP 預設 PIN 為 1234，可在 app.js 的 SCHOOL_PROFILE.adminPin 修改。</p>
             <form id="adminLogin" class="form-grid">
               <label class="field full">PIN 碼
                 <input name="pin" type="password" inputmode="numeric" required />
